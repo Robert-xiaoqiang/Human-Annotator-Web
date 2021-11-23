@@ -25,12 +25,12 @@ SECRET_KEY = 'django-insecure-pud+36-6z2rb8q^1hunbp9!eb7_bys(8xmdzp4^*v3rsmj98@q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['10.214.223.233', 'localhost', '127.0.0.1']
 
 # Application definition
 
 INSTALLED_APPS = [
+    'hahaweb.apps.HahawebConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
