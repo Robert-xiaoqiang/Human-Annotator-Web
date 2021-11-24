@@ -38,14 +38,13 @@ def build_json_response(status, message, data):
     return JsonResponse(ret)
 
 def login(request):
-    authorization_code = request.POST['authorization_code']
+    authorization_code = request.POST['authorizationCode']
 
     try:
         annotator = Annotator.objects.get(authorization_code = authorization_code)
         return build_json_response(True, 'log in successfully', annotator)
     except Annotator.DoesNotExist:
-        annotator = None
-        return build_json_response(False, 'authorization_code doesn\'t exist', annotator)
+        return build_json_response(False, 'authorization_code doesn\'t exist', None)
 
 def allCandidates(request):
     grouped_candidates = { }
@@ -69,4 +68,12 @@ def rateCandidate(request):
     answerability_scores = request.POST['answerability']
     relevance_scores = request.POST['relevance']
 
-    
+    for pk, grammaticality_score, answerability_score, relevance_score in zip(candidates_pks, grammaticality_scores, answerability_scores, relevance_scores):
+        target_candidate = SystemOutput.objects.get(pk = pk)
+        target_candidate.grammaticality_score = grammaticality_score
+        target_candidate.answerability_score = answerability_score
+        target_candidate.relevance_score = relevance_score
+
+        target_candidate.save()
+
+    return build_json_response(True, '', None)
