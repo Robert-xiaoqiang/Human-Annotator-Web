@@ -42,38 +42,61 @@ def login(request):
 
     try:
         annotator = Annotator.objects.get(authorization_code = authorization_code)
-        return build_json_response(True, 'log in successfully', annotator)
+        ret = build_json_response(True, 'log in successfully', annotator)
     except Annotator.DoesNotExist:
-        return build_json_response(False, 'authorization_code doesn\'t exist', None)
+        ret = build_json_response(False, 'authorization_code doesn\'t exist', None)
+    
+    return ret
 
 def allCandidates(request):
-    grouped_candidates = { }
-    for obj in SystemOutput.objects.all():
-        grouped_candidates.setdefault(obj.sample.id, []).append(obj)
+    authorization_code = request.POST['authorizationCode']
 
-    all_samples = MRCSample.objects.all()
-    all_samples_list = json.loads(serializers.serialize('json', all_samples, use_natural_foreign_keys = True))
+    try:
+        annotator = Annotator.objects.get(authorization_code = authorization_code)
+        grouped_candidates = { }
+        for obj in SystemOutput.objects.all():
+            grouped_candidates.setdefault(obj.sample.id, []).append(obj)
 
-    # python list of dicts
-    for sample in all_samples_list:
-        sample['fields']['cancandidate_questions'] = json.loads(serializers.serialize('json', grouped_candidates[sample['pk']], use_natural_foreign_keys = True, fields = [ 'candidate_question', 'system_key' ]))
+        all_samples = MRCSample.objects.all()
+        all_samples_list = json.loads(serializers.serialize('json', all_samples, use_natural_foreign_keys = True))
 
-    all_samples_with_candidates_list = all_samples_list
+        # python list of dicts
+        for sample in all_samples_list:
+            sample['fields']['candidate_questions'] = json.loads(serializers.serialize('json', grouped_candidates[sample['pk']], use_natural_foreign_keys = True, fields = [ 'candidate_question', 'system_key' ]))
 
-    return build_json_response(True, '', all_samples_with_candidates_list)
+        all_samples_with_candidates_list = all_samples_list
+        ret = build_json_response(True, '', all_samples_with_candidates_list)
+    except:
+        ret = build_json_response(False, 'authorization_code doesn\'t exist', None)
+
+    return ret
 
 def rateCandidate(request):
+    authorization_code = request.POST['authorizationCode']
     candidates_pks = request.POST['candidates']
     grammaticality_scores = request.POST['grammaticality']
     answerability_scores = request.POST['answerability']
     relevance_scores = request.POST['relevance']
 
-    for pk, grammaticality_score, answerability_score, relevance_score in zip(candidates_pks, grammaticality_scores, answerability_scores, relevance_scores):
-        target_candidate = SystemOutput.objects.get(pk = pk)
-        target_candidate.grammaticality_score = grammaticality_score
-        target_candidate.answerability_score = answerability_score
-        target_candidate.relevance_score = relevance_score
+    try:
+        annotator = Annotator.objects.get(authorization_code = authorization_code)
+        for pk, grammaticality_score, answerability_score, relevance_score in zip(candidates_pks, grammaticality_scores, answerability_scores, relevance_scores):
+            target_candidate = SystemOutput.objects.get(pk = pk)
+            try:
+                rate = Rating.objects.get(annotator = annotator, candidate = target_candidate)
+                rate.grammaticality_score = grammaticality_score
+                rate.answerability_score = answerability_score
+                rate.relevance_score = relevance_score
+                rate.save()
+            except:
+                new_rate = Rating.objects.create(annotator = annotator,
+                                                 candidate = target_candidate,
+                                                 grammaticality_score = grammaticality_score,
+                                                 answerability_score = answerability_score,
+                                                 relevance_score = relevance_score)
+                new_rate.save()
+        ret = build_json_response(True, '', None)
+    except Annotator.DoesNotExist:
+        ret = build_json_response(False, 'authorization_code doesn\'t exist', None)
 
-        target_candidate.save()
-
-    return build_json_response(True, '', None)
+    return ret
