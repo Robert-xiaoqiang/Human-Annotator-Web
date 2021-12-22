@@ -11,7 +11,7 @@ export default class CandidateRate extends React.Component {
         super(props)
         const toolTips = {
             grammaticalityScore: [ 'unacceptable', 'lots of grammatical errors and unable to infer actual meaning', 'partially grammatical errors but able to infer actual meaning', 'no grammatical errors' ],
-            answerabilityScore: [  'all important information is missing', 'most of the important information is missing an unable to infer the answer', 'most of the important information is present able to infer the answer', 'all important information is present' ],
+            answerabilityScore: [  'all important information is missing', 'most of the important information is missing and unable to infer the answer', 'most of the important information is present and able to infer the answer', 'all important information is present' ],
             relevanceScore: [ 'totally irrelevant', 'mostly irrelevant and unable to answer the question', 'slightly irrelevant but able to answer the question', 'completely relevant'  ]
         }
         const scoreLeadings = {
